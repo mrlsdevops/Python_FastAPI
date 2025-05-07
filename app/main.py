@@ -23,7 +23,6 @@ class Post(BaseModel):
     title: str
     content: str
     published: bool = True
-    rating: Optional[int] = None
 
 
 
@@ -72,15 +71,16 @@ def test_posts(db: Session = Depends(get_database)):
 
 # # Read all posts
 @app.get("/posts")
-def get_posts():
-    conn = get_db()
-    try:
-        with conn.cursor(row_factory=dict_row) as cur:
-            cur.execute("SELECT * FROM posts")
-            posts = cur.fetchall()
+def get_posts(db: Session = Depends(get_database)):
+    # conn = get_db()
+    # try:
+    #     with conn.cursor(row_factory=dict_row) as cur:
+    #         cur.execute("SELECT * FROM posts")
+    #         posts = cur.fetchall()
+            posts = db.query(models.Post).all()
             return {"data": posts}
-    finally:
-        conn.close()
+    # finally:
+    #     conn.close()
 
 # Create Post
 @app.post("/posts", status_code=status.HTTP_201_CREATED)
@@ -94,9 +94,7 @@ def create_post(post: Post, db: Session = Depends(get_database)):
     #         new_post = cur.fetchone()
     #         # commit changes to postgresql
     #         conn.commit()
-            new_post = models.Post(
-                title=post.title, content=post.content, published=post.published
-            )
+            new_post = models.Post(**post.dict())
             db.add(new_post)
             db.commit()
             db.refresh(new_post)
