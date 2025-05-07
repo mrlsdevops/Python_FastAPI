@@ -59,14 +59,16 @@ def find_index_post(id):
 def root():
     return {"message": "Welcome to api"}
 
-# @app.get("/sqlalchemy")
-# def test_posts(db: Session = Depends(get_database)):
-#     return {"status": "Success"}
-
 @app.get("/sqlalchemy")
-def test_connection(db: Session = Depends(get_database)):
-    db.execute("SELECT 1")
-    return {"status": "ok"}
+def test_posts(db: Session = Depends(get_database)):
+
+    posts = db.query(models.Post).all()
+    return {"data": posts}
+
+# @app.get("/sqlalchemy")
+# def test_connection(db: Session = Depends(get_database)):
+#     db.execute("SELECT 1")
+#     return {"status": "ok"}
 
 # # Read all posts
 @app.get("/posts")
@@ -82,20 +84,26 @@ def get_posts():
 
 # Create Post
 @app.post("/posts", status_code=status.HTTP_201_CREATED)
-def create_post(post: Post):
-    conn = get_db()
-    try:
-        with conn.cursor(row_factory=dict_row) as cur:
-            cur.execute("""INSERT INTO posts (title, content, published)
-                        VALUES (%s, %s, %s) RETURNING * """,
-                        (post.title, post.content, post.published))
-            new_post = cur.fetchone()
-            # commit changes to postgresql
-            conn.commit()
+def create_post(post: Post, db: Session = Depends(get_database)):
+    # conn = get_db()
+    # try:
+    #     with conn.cursor(row_factory=dict_row) as cur:
+    #         cur.execute("""INSERT INTO posts (title, content, published)
+    #                     VALUES (%s, %s, %s) RETURNING * """,
+    #                     (post.title, post.content, post.published))
+    #         new_post = cur.fetchone()
+    #         # commit changes to postgresql
+    #         conn.commit()
+            new_post = models.Post(
+                title=post.title, content=post.content, published=post.published
+            )
+            db.add(new_post)
+            db.commit()
+            db.refresh(new_post)
 
             return{"data": new_post}
-    finally:
-        conn.close()
+    # finally:
+    #     conn.close()
         
 
 # Read latest post
