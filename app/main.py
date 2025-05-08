@@ -112,51 +112,63 @@ def get_latest_post():
 
 # Read post with specific id
 @app.get("/posts/{id}")
-def get_post(id : int):
-    conn = get_db()
-    try:
-        with conn.cursor(row_factory=dict_row) as cur:
-            cur.execute("""SELECT * FROM posts WHERE id = %s """, (str(id),))
-            posts = cur.fetchone()
-            if not posts:
+def get_post(id : int, db: Session = Depends(get_database)):
+    # conn = get_db()
+    # try:
+    #     with conn.cursor(row_factory=dict_row) as cur:
+    #         cur.execute("""SELECT * FROM posts WHERE id = %s """, (str(id),))
+    #         posts = cur.fetchone()
+
+            post = db.query(models.Post).filter(models.Post.id == id).first()
+            if not post:
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                                     detail=f"post with id: {id} was not found")
-            return {"data": posts}      
-    finally:
-        conn.close()
+            return {"post_detail": post}      
+    # finally:
+    #     conn.close()
 
 
 # Deleting Post
 @app.delete("/posts/{id}" , status_code = status.HTTP_204_NO_CONTENT)
-def delete_post(id: int):
-    conn = get_db()
-    try:
-        with conn.cursor(row_factory=dict_row) as cur:
-            cur.execute("""DELETE FROM posts WHERE id = %s returning *""", (str(id),))
-            deleted_post = cur.fetchone()
-            conn.commit()
-
-            if deleted_post == None:
+def delete_post(id: int, db: Session = Depends(get_database)):
+    # conn = get_db()
+    # try:
+    #     with conn.cursor(row_factory=dict_row) as cur:
+    #         cur.execute("""DELETE FROM posts WHERE id = %s returning *""", (str(id),))
+    #         deleted_post = cur.fetchone()
+    #         conn.commit()
+            
+            post = db.query(models.Post).filter(models.Post.id == id)
+            if post.first() == None:
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                                     detail=f"post with id: {id} does not exist")
+            post.delete(synchronize_session=False)
+            db.commit()
+
             return Response(status_code = status.HTTP_204_NO_CONTENT)
-    finally:
-        conn.close()
+    # finally:
+    #     conn.close()
 
 @app.put("/posts/{id}")
-def update_post(id: int, post: Post):
-    conn = get_db()
-    try:
-        with conn.cursor(row_factory=dict_row) as cur:
-            cur.execute(""" UPDATE posts SET title = %s, content = %s, published = %s WHERE id = %s
-            RETURNING *""",
-                    (post.title, post.content, post.published, str(id),))
-            updated_post = cur.fetchone()
-            conn.commit()
-            if updated_post == None:
+def update_post(id: int, updated_post: Post,db: Session = Depends(get_database)):
+    # conn = get_db()
+    # try:
+    #     with conn.cursor(row_factory=dict_row) as cur:
+    #         cur.execute(""" UPDATE posts SET title = %s, content = %s, published = %s WHERE id = %s
+    #         RETURNING *""",
+    #                 (post.title, post.content, post.published, str(id),))
+    #         updated_post = cur.fetchone()
+    #         conn.commit()
+            post_query = db.query(models.Post).filter(models.Post.id == id)
+            post = post_query.first()
+
+            if post == None:
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"post with id: {id} does not exist")
+            
+            post_query.update(updated_post.dict(),synchronize_session=False)
+            db.commit()
     
-            return {'message': updated_post}
-    finally:
-        conn.close()
+            return {'message': post_query.first()}
+    # finally:
+    #     conn.close()
