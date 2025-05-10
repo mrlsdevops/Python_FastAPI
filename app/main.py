@@ -1,3 +1,4 @@
+from typing import List
 from fastapi import FastAPI, Response, status, HTTPException, Depends
 import psycopg
 from psycopg.rows import dict_row
@@ -44,21 +45,22 @@ def root():
 
 
 # # Read all posts
-@app.get("/posts")
+@app.get("/posts", response_model=List[schemas.Post])
 def get_posts(db: Session = Depends(get_database)):
             posts = db.query(models.Post).all()
-            return {"data": posts}
+            return posts 
 
 # Create Post
-@app.post("/posts", status_code=status.HTTP_201_CREATED)
+@app.post("/posts", status_code=status.HTTP_201_CREATED, response_model=schemas.Post)
 def create_post(post: schemas.PostCreate, db: Session = Depends(get_database)):
-        new_post = models.Post(**post.dict())
-        db.add(new_post)
-        db.commit()
-        db.refresh(new_post)
+    new_post = models.Post(**post.dict())
+    db.add(new_post)
+    db.commit()
+    db.refresh(new_post)
 
-        return{"data": new_post}
-        
+    # return{"data": new_post} # That means Fast API is trying to serialize a SQLAlchemy model dirctly 
+    # But, here response model expects a pydantic model.
+    return new_post # SQLAlchemy model
 
 # Read latest post
 @app.get("/posts/latest")
@@ -67,13 +69,13 @@ def get_latest_post():
     return {"details": post}
 
 # Read post with specific id
-@app.get("/posts/{id}")
+@app.get("/posts/{id}", response_model=schemas.Post)
 def get_post(id : int, db: Session = Depends(get_database)):
         post = db.query(models.Post).filter(models.Post.id == id).first()
         if not post:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                                 detail=f"post with id: {id} was not found")
-        return {"post_detail": post}
+        return post
 
 
 # Deleting Post
@@ -88,7 +90,7 @@ def delete_post(id: int, db: Session = Depends(get_database)):
 
         return Response(status_code = status.HTTP_204_NO_CONTENT)
 
-@app.put("/posts/{id}")
+@app.put("/posts/{id}", response_model=schemas.Post)
 def update_post(id: int, updated_post: schemas.PostCreate,db: Session = Depends(get_database)):
         post_query = db.query(models.Post).filter(models.Post.id == id)
         post = post_query.first()
@@ -100,4 +102,4 @@ def update_post(id: int, updated_post: schemas.PostCreate,db: Session = Depends(
         post_query.update(updated_post.dict(),synchronize_session=False)
         db.commit()
 
-        return {'message': post_query.first()}
+        return post_query.first()
