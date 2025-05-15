@@ -1,12 +1,15 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 import os
+import psycopg
+from psycopg.rows import dict_row
+from fastapi import FastAPI, HTTPException
+from .config import settings
 
-PASS = os.getenv('DB_PASS')
-if not PASS:
-    raise RuntimeError("DB_PASS environment variable not set!")
-
-SQLALCHEMY_DATABASE_URL = f'postgresql+psycopg://postgres:{PASS}@127.0.0.1/fastapi'
+SQLALCHEMY_DATABASE_URL = (
+    f"postgresql+psycopg://{settings.database_username}:{settings.database_password}"
+    f"@{settings.database_hostname}:{settings.database_port}/{settings.database_name}"
+)
 
 engine = create_engine(SQLALCHEMY_DATABASE_URL, echo=True, future=True)
 
@@ -21,3 +24,16 @@ def get_database():
     finally:
         db.close()
 
+# Reference - to establish DB connection
+# def get_db():
+#     try:
+#         conn = psycopg.connect(
+#             host='localhost',
+#             dbname='fastapi',
+#             user='postgres',
+#             password=os.getenv('DB_PASS')
+#         )
+#         return conn
+#     except Exception as error:
+#         print("DB connection error:", error)
+#         raise HTTPException(status_code=500, detail="Database connection error")

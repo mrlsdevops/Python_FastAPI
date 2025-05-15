@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from . import schemas
 from fastapi import Depends, status, HTTPException
 from fastapi.security import OAuth2PasswordBearer
-import os
+from .config import settings
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='login')
 
@@ -12,9 +12,9 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl='login')
 #Expiratiom time
 
 # openssl rand -hex 32 -> To generate random secret key using openssl
-SECRET_KEY = os.getenv("SEC_TOKEN")
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+SECRET_KEY = {settings.secret_key}
+ALGORITHM = {settings.algorithm}
+ACCESS_TOKEN_EXPIRE_MINUTES = {settings.access_token_expire_minutes}
 
 def create_access_token(data: dict):
     to_encode = data.copy()
