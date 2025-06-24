@@ -12,9 +12,9 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl='login')
 #Expiratiom time
 
 # openssl rand -hex 32 -> To generate random secret key using openssl
-SECRET_KEY = {settings.secret_key}
-ALGORITHM = {settings.algorithm}
-ACCESS_TOKEN_EXPIRE_MINUTES = {settings.access_token_expire_minutes}
+SECRET_KEY = settings.secret_key
+ALGORITHM = settings.algorithm
+ACCESS_TOKEN_EXPIRE_MINUTES = settings.access_token_expire_minutes
 
 def create_access_token(data: dict):
     to_encode = data.copy()
