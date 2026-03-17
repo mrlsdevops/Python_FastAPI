@@ -1,0 +1,31 @@
+# Repository settings managed via the GitHub Settings app
+# https://github.com/apps/settings
+#
+# These settings are automatically applied to the repository whenever this file
+# is updated on the default branch. Install the Settings app on the repository
+# to enable automatic enforcement.
+
+repository:
+  # Code security and analysis
+  # CodeQL is disabled — no default_branch code scanning required
+  security_and_analysis:
+    advanced_security:
+      status: disabled
+    secret_scanning:
+      status: disabled
+    secret_scanning_push_protection:
+      status: disabled
+
+branches:
+  - name: main
+    protection:
+      required_pull_request_reviews:
+        required_approving_review_count: 1
+        dismiss_stale_reviews: false
+        require_code_owner_reviews: false
+      required_status_checks:
+        strict: false
+        # CodeQL Analysis is intentionally omitted — CodeQL has been disabled
+        contexts: []
+      enforce_admins: false
+      restrictions: null
