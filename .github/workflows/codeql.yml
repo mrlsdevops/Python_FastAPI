@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
 
     permissions:
-      actions: read
+      actions: write
       contents: read
       security-events: write
 
@@ -24,12 +24,25 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Delete stale CodeQL overlay cache from old repository path
+        run: |
+          # Fetch up to 100 overlay caches (sufficient for any real-world repo)
+          gh api "repos/${{ github.repository }}/actions/caches?per_page=100" \
+            --jq '.actions_caches[] | select(.key | startswith("codeql-overlay-base-database")) | .id' \
+            | xargs -r -I{} gh api -X DELETE "repos/${{ github.repository }}/actions/caches/{}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true
+
+      - name: Create compatibility path for renamed repository
+        run: |
+          mkdir -p /home/runner/work/Python_FastAPI
+          ln -sf "${GITHUB_WORKSPACE}" /home/runner/work/Python_FastAPI/Python_FastAPI
+
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:
           languages: ${{ matrix.language }}
-          config: |
-            name: python-fastapi
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
