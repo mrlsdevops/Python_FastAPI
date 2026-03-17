@@ -23,12 +23,14 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          path: Python_FastAPI
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:
           languages: python
-          source-root: .
+          source-root: Python_FastAPI
       
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
