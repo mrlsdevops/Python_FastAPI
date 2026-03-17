@@ -26,6 +26,11 @@ jobs:
         with:
           path: Python_FastAPI
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:
@@ -34,3 +39,5 @@ jobs:
       
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
+        with:
+          working-directory: Python_FastAPI
