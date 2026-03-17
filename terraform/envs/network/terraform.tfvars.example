@@ -1,0 +1,15 @@
+# Example values only — copy to terraform.tfvars and fill in real values.
+# terraform.tfvars is gitignored and must NEVER be committed.
+
+aws_region = "us-east-1"
+project    = "fastapi-dev"
+env        = "dev"
+
+# All network values are injected as GitHub Secrets (TF_VAR_*) in the
+# network-provision workflow, not from this file in CI.
+# Fill in locally only for manual Terraform runs:
+
+# vpc_cidr             = ""   # e.g. "10.0.0.0/16"
+# public_subnet_cidrs  = []   # e.g. ["10.0.1.0/24", "10.0.2.0/24"]
+# private_subnet_cidrs = []   # e.g. ["10.0.3.0/24", "10.0.4.0/24"]
+# azs                  = []   # e.g. ["us-east-1a", "us-east-1b"]

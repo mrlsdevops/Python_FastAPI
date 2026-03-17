@@ -1,0 +1,18 @@
+# Example values only — copy to terraform.tfvars and fill in real values.
+# terraform.tfvars is gitignored. Never commit real credentials.
+
+aws_region           = "us-east-1"
+project              = "fastapi-dev"
+env                  = "dev"
+
+# network_state_bucket = ""   # injected as GitHub Secret TF_VAR_network_state_bucket
+# network_state_key    = ""   # injected as GitHub Secret TF_VAR_network_state_key
+
+node_instance_types  = ["t3.small"]
+node_desired         = 2
+node_min             = 1
+node_max             = 3
+
+# db_name     = ""   # injected as GitHub Secret TF_VAR_db_name
+# db_username = ""   # injected as GitHub Secret TF_VAR_db_username
+# db_password = ""   # injected as GitHub Secret TF_VAR_db_password
