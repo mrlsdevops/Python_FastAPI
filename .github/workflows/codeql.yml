@@ -23,21 +23,14 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          path: Python_FastAPI
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:
           languages: python
-          source-root: Python_FastAPI
       
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
-        with:
-          working-directory: Python_FastAPI
