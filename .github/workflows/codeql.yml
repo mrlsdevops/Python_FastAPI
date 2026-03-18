@@ -1,0 +1,59 @@
+name: CodeQL
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  analyze:
+    name: CodeQL Analysis
+    runs-on: ubuntu-latest
+
+    permissions:
+      actions: write
+      contents: read
+      security-events: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: ["python"]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Delete stale CodeQL overlay caches from old repo name
+        run: |
+          echo "Listing CodeQL overlay caches..."
+          gh api repos/${{ github.repository }}/actions/caches \
+            --jq '.actions_caches[] | select(.key | startswith("codeql-overlay")) | .id' \
+            2>/dev/null | while read cache_id; do
+            echo "Deleting stale cache id=$cache_id"
+            gh api --method DELETE repos/${{ github.repository }}/actions/caches/$cache_id 2>/dev/null || true
+          done
+          echo "Cache cleanup done."
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true
+
+      - name: Create compatibility symlink for renamed repo
+        # This repo was renamed from Python_FastAPI to python-fastapi.
+        # Stale CodeQL overlay caches may still reference the old path.
+        # This symlink ensures pre-finalize.sh succeeds if a stale cache survives deletion.
+        run: |
+          mkdir -p /home/runner/work/Python_FastAPI
+          ln -sf "$GITHUB_WORKSPACE" /home/runner/work/Python_FastAPI/Python_FastAPI
+        continue-on-error: true
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{ matrix.language }}"
