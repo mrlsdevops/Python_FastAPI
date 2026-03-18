@@ -1,0 +1,87 @@
+name: Network Provision (VPC only)
+
+# ── MANUAL TRIGGER ONLY ───────────────────────────────────────────────────────
+# This workflow is intentionally isolated from all other pipelines.
+# It manages VPC/subnet/NAT topology — no network values are stored in the repo.
+# All CIDR blocks, subnet ranges, and state locations come from GitHub Secrets.
+#
+# Setup required in GitHub:
+#   1. Create a GitHub Environment named "network" with required reviewers
+#      (Settings → Environments → network → Require reviewers)
+#   2. Add all TF_VAR_* and backend secrets to that environment
+#   3. Never approve this workflow without a peer review.
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "Terraform action"
+        required: true
+        default: "plan"
+        type: choice
+        options: [plan, apply, destroy]
+      env:
+        description: "Target environment"
+        required: true
+        default: "dev"
+        type: choice
+        options: [dev, prod]
+
+permissions:
+  id-token: write   # OIDC — no static AWS keys stored anywhere
+  contents: read
+
+jobs:
+  network:
+    name: "Network ${{ inputs.action }} (${{ inputs.env }})"
+    runs-on: ubuntu-latest
+    environment: network   # ← requires manual approval from a reviewer
+
+    defaults:
+      run:
+        working-directory: terraform/envs/network
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_NETWORK_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        run: |
+          terraform init \
+            -backend-config="bucket=${{ secrets.TF_STATE_BUCKET }}" \
+            -backend-config="key=network/${{ inputs.env }}/terraform.tfstate" \
+            -backend-config="region=${{ secrets.AWS_REGION }}" \
+            -backend-config="dynamodb_table=${{ secrets.TF_LOCK_TABLE }}"
+
+      - name: Terraform Plan
+        env:
+          TF_VAR_aws_region: ${{ secrets.AWS_REGION }}
+          TF_VAR_project: ${{ secrets.PROJECT_NAME }}
+          TF_VAR_env: ${{ inputs.env }}
+          TF_VAR_vpc_cidr: ${{ secrets.VPC_CIDR }}
+          TF_VAR_public_subnet_cidrs: ${{ secrets.PUBLIC_SUBNET_CIDRS }}
+          TF_VAR_private_subnet_cidrs: ${{ secrets.PRIVATE_SUBNET_CIDRS }}
+          TF_VAR_azs: ${{ secrets.AVAILABILITY_ZONES }}
+        run: terraform plan -out=tfplan
+
+      - name: Terraform Apply
+        if: inputs.action == 'apply'
+        run: terraform apply -auto-approve tfplan
+
+      - name: Terraform Destroy
+        if: inputs.action == 'destroy'
+        env:
+          TF_VAR_aws_region: ${{ secrets.AWS_REGION }}
+          TF_VAR_project: ${{ secrets.PROJECT_NAME }}
+          TF_VAR_env: ${{ inputs.env }}
+          TF_VAR_vpc_cidr: ${{ secrets.VPC_CIDR }}
+          TF_VAR_public_subnet_cidrs: ${{ secrets.PUBLIC_SUBNET_CIDRS }}
+          TF_VAR_private_subnet_cidrs: ${{ secrets.PRIVATE_SUBNET_CIDRS }}
+          TF_VAR_azs: ${{ secrets.AVAILABILITY_ZONES }}
+        run: terraform destroy -auto-approve

@@ -1,0 +1,10 @@
+aws_region = "us-east-1"
+project    = "fastapi-dev"
+env        = "dev"
+
+# Optional overrides (if omitted, defaults to <project>-<env>-...)
+# state_bucket_name = "fastapi-dev-dev-tf-state"
+# lock_table_name   = "fastapi-dev-dev-tf-locks"
+
+# Keep false in normal usage
+state_bucket_force_destroy = false

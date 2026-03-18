@@ -6,7 +6,25 @@ dist/
 wheels/
 *.egg-info
 .DS_Store
+
+# Tool caches
+.pytest_cache/
+.ruff_cache/
+
 # Virtual environments
 .venv
 .env
 .trunk/
+
+# Terraform — never commit real variable values or state
+*.tfvars
+!*.tfvars.example
+*.tfstate
+*.tfstate.backup
+.terraform/
+.terraform.lock.hcl
+tfplan
+
+# Lambda build artifacts
+lambda/package/
+lambda/*.zip

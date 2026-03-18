@@ -1,9 +1,5 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
-import os
-import psycopg
-from psycopg.rows import dict_row
-from fastapi import FastAPI, HTTPException
 from .config import settings
 
 SQLALCHEMY_DATABASE_URL = (
@@ -17,12 +13,14 @@ SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False, futu
 
 Base = declarative_base()
 
+
 def get_database():
     db = SessionLocal()
     try:
         yield db
     finally:
         db.close()
+
 
 # Reference - to establish DB connection
 # def get_db():
