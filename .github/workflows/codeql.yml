@@ -33,6 +33,7 @@ jobs:
         uses: github/codeql-action/init@v3
         with:
           languages: python
+          source-root: .
       - name: Autobuild
         uses: github/codeql-action/autobuild@v3
 
