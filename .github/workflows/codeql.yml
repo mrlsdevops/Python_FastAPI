@@ -23,10 +23,13 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          path: repo
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:
           languages: python
+          source-root: repo
         env:
           CODEQL_ACTION_DISABLE_DATABASE_CACHE: true
       - name: Autobuild
